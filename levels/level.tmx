@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.3.1" orientation="orthogonal" renderorder="right-down" compressionlevel="-1" width="8" height="6" tilewidth="100" tileheight="100" infinite="0" nextlayerid="2" nextobjectid="1">
+ <editorsettings>
+  <export target="../src/assets/levels/level1.json" format="json"/>
+ </editorsettings>
+ <tileset firstgid="1" name="Tiles_x1" tilewidth="100" tileheight="100" tilecount="39" columns="13">
+  <image source="../../Sites/Edgar/levels/Tiles_x1.png" width="1300" height="300"/>
+ </tileset>
+ <layer id="1" name="Collide" width="8" height="6">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,
+0,0,27,0,0,0,0,0,
+0,27,0,0,0,0,0,0,
+27,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+</data>
+ </layer>
+</map>
