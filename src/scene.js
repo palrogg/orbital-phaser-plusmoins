@@ -24,25 +24,28 @@ export class LevelsScene extends Phaser.Scene {
     this.load.spritesheet('enemy', 'sprites/spritesheet_caveman.png', { frameWidth: 32, frameHeight: 32 });
     
     // sound
+    this.load.audio('music', [ 'sound/game_jam_v1.mp3' ]);
     this.load.audio('move', [ 'sound/deplacement-electric.wav' ]);
     
     // this.load.audio('music', [ 'bass.ogg', 'bass.mp3' ]);
   }
 
 
-  loadLevel(scene){
-    const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
-    player = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, "atlas", "misa-front");
+  loadLevel(){
+    // const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
+    // player = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, "atlas", "misa-front");
+    this.map = this.make.tilemap({ key: `lvl${currentLevel}` });
+    var tileset = this.map.addTilesetImage('objetTiles-07');
+    var layer = this.map.createStaticLayer(0, tileset, 0, 0);
+    layer.depth = -5;
   }
 
-  nextLevel(scene){
+  nextLevel(){
     currentLevel += 1;
     if(currentLevel <= maxLevel){
-      scene.map.removeAllLayers(); // dirty
-      scene.map = scene.make.tilemap({ key: `lvl${currentLevel}` });
-      var tileset = scene.map.addTilesetImage('objetTiles-07');
-      var layer = scene.map.createStaticLayer(0, tileset, 0, 0);
-      layer.depth = -5;
+      this.map.removeAllLayers(); // dirty
+      
+      this.loadLevel();
     }
   }
 
@@ -51,25 +54,16 @@ export class LevelsScene extends Phaser.Scene {
     const greenBackground = this.add.rectangle(400, 450, 800, 300, 0x0000cc);
     redBackground.depth = -15;
     greenBackground.depth = -15;
+    
     const cursors = this.input.keyboard.createCursorKeys();
     
-    const bgGroup = this.add.group();
-    // const mapGroup = this.add.group({defaultKey: 'mapGroup'})
-    
-    // var map = this.make.tilemap({ key: 'map' });
-    // var tileset = map.addTilesetImage('Tiles_x1');
-    // var layer = map.createDynamicLayer(0, tileset, 0, 0);
-    this.map = this.make.tilemap({ key: 'lvl1' });
-    var tileset = this.map.addTilesetImage('objetTiles-07');
-    var layer = this.map.createDynamicLayer(0, tileset, 0, 0);
-    console.log(this.map.getTileAt(1,1))
-    
-    layer.setCollisionByProperty({ collides: true });
-    
-    // mapGroup.add(map);
+    this.loadLevel()
+
     // const music = this.sound.add('music');
     
     this.moveSound = this.sound.add('move');
+    this.music = this.sound.add('music');
+    // this.music.play();
     
     // temp
     for(let i = 1; i < 8; i++){
@@ -97,6 +91,7 @@ export class LevelsScene extends Phaser.Scene {
     
     redGuy = this.add.sprite(50, 250, 'enemy');
     let redPlayer = new Player(1, 1);
+    redPlayer.sprite = redGuy;
     
     blackGuy = this.add.sprite(50, 350, 'enemy');
     
@@ -157,7 +152,7 @@ export class LevelsScene extends Phaser.Scene {
       this.move(redGuy.x, redGuy.y + 100, redGuy, scene);
       this.move(blackGuy.x, blackGuy.y - 100, blackGuy, scene);
       
-      nextLevel(scene);
+      this.nextLevel();
       // scene.load.script('main-scene', 'scene.js');
     }
   }
