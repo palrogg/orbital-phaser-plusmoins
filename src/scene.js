@@ -19,10 +19,14 @@ export class LevelsScene extends Phaser.Scene {
     
     // character sprites
     this.load.spritesheet('enemy', 'sprites/spritesheet_caveman.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.image('red', 'sprites/red.png');
+    this.load.image('blue', 'sprites/blue.png');
     
     // sound
     this.load.audio('music', [ 'sound/game_jam_v1.mp3' ]);
     this.load.audio('move', [ 'sound/deplacement.wav' ]);
+    
+    this.tweenTimeout = null;
   }
 
 
@@ -48,8 +52,8 @@ export class LevelsScene extends Phaser.Scene {
   }
 
   create() {
-    const redBackground = this.add.rectangle(400, 150, 800, 300, 0xcc0000);
-    const greenBackground = this.add.rectangle(400, 450, 800, 300, 0x0000cc);
+    const redBackground = this.add.rectangle(400, 150, 800, 300, 0xcc9999);
+    const greenBackground = this.add.rectangle(400, 450, 800, 300, 0x9999cc);
     redBackground.depth = -15;
     greenBackground.depth = -15;
     
@@ -62,7 +66,7 @@ export class LevelsScene extends Phaser.Scene {
     
     // music
     this.music = this.sound.add('music', {loop: true});
-    this.music.play();
+    // this.music.play();
     
     // temp
     for(let i = 1; i < 8; i++){
@@ -89,10 +93,10 @@ export class LevelsScene extends Phaser.Scene {
     }
     
     this.redPlayer = new Player(0, 2, 'Red');
-    this.redPlayer.sprite = this.add.sprite(50, 250, 'enemy');;
+    this.redPlayer.sprite = this.add.sprite(50, 250, 'red');;
     
     this.bluePlayer = new Player(0, 3, 'Blue');
-    this.bluePlayer.sprite = this.add.sprite(50, 350, 'enemy');
+    this.bluePlayer.sprite = this.add.sprite(50, 350, 'blue');
     
     let scene = this;
     this.input.keyboard.on('keydown', function(e){
@@ -105,8 +109,16 @@ export class LevelsScene extends Phaser.Scene {
   }
   tweenComplete(target){
     console.log('tween complete')
-    listensToKeyboard = true;
-    this.fall(target);
+    
+    clearTimeout(this.tweenTimeout);
+    let scene = this;
+    this.tweenTimeout = setTimeout(function(){
+      listensToKeyboard = true;
+      scene.fall();
+      
+      scene.checkForEvents(scene.redPlayer);
+      scene.checkForEvents(scene.bluePlayer);
+    })
   }
   
   fall(target){
@@ -176,51 +188,36 @@ export class LevelsScene extends Phaser.Scene {
     }
   }
   
+  checkForEvents(target){
+    let resultEvent = this.map.getTileAt(target.x, target.y, false, 'Event');
+    if (resultEvent !== null){
+      // special tile
+      console.log('Event!', resultEvent.layer.name);
+      console.log(resultEvent);  
+    }
+  }
+  
   attemptMove(target, xSpan, ySpan){
     let result = this.map.getTileAt(target.x + xSpan, target.y + ySpan, false, 'Collision');
     let resultEvent = this.map.getTileAt(target.x + xSpan, target.y + ySpan, false, 'Event');
     
     if (xSpan != 0){
       // horizontal movement
-      if(result){
+      if(!result){
+        this.move(target, xSpan, ySpan);
+      } else {
         // collision
-        console.log('collision')
         this.showCollision(target, xSpan, ySpan);
         return;
-      } else {
-        this.move(target, xSpan, ySpan);
       }
     }else{
       // vertical movement
       if (ySpan < 0 && target.name == 'Red'){
-        console.log('Red climbs')
         this.attemptClimb(target, xSpan, ySpan);
       } else if (ySpan > 0 && target.name == 'Blue'){
-        console.log('Blue climbs')
         this.attemptClimb(target, xSpan, ySpan);
-      } else {
-        // fall -- just for debug
-        if (target.name == 'Red' && target.y >= 2){
-          console.log('too low')
-          this.showCollision(target, xSpan, ySpan);
-        } else if (target.name == 'Blue' && target.y <= 3){
-          this.showCollision(target, xSpan, ySpan);
-        } else {
-          console.log('going down')
-          this.move(target, xSpan, ySpan)
-        }
       }
     }
-    /*if (resultEvent !== null){
-      // special tile
-      console.log('Event!', resultEvent.layer.name);
-      console.log(resultEvent);
-      
-    } else {
-      // no tile
-      console.log('no coll')
-      // return result;
-    }*/
   }
   
   keyDown(e, scene){
