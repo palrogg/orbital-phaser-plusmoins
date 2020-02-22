@@ -1,43 +1,12 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "format":"json",
-         "target":"."
-        }
-    },
  "height":6,
  "infinite":false,
  "layers":[
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 27, 0, 27, 0, 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "data":[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 8, 4, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
          "height":6,
          "id":1,
-         "name":"Collide",
-         "opacity":1,
-         "properties":[
-                {
-                 "name":"collides",
-                 "type":"bool",
-                 "value":true
-                }, 
-                {
-                 "name":"endLevel",
-                 "type":"int",
-                 "value":0
-                }],
-         "type":"tilelayer",
-         "visible":true,
-         "width":8,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         "height":6,
-         "id":2,
-         "name":"Animate",
+         "name":"Tile Layer 1",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
@@ -45,29 +14,23 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":3,
+ "nextlayerid":2,
  "nextobjectid":1,
  "orientation":"orthogonal",
- "properties":[
-        {
-         "name":"collides",
-         "type":"bool",
-         "value":true
-        }],
  "renderorder":"right-down",
  "tiledversion":"1.3.1",
  "tileheight":100,
  "tilesets":[
         {
-         "columns":13,
+         "columns":3,
          "firstgid":1,
-         "image":"..\/..\/Sites\/Edgar\/levels\/Tiles_x1.png",
+         "image":"..\/sprites\/objetTiles-07.png",
          "imageheight":300,
-         "imagewidth":1300,
+         "imagewidth":300,
          "margin":0,
-         "name":"Tiles_x1",
+         "name":"objetTiles-07",
          "spacing":0,
-         "tilecount":39,
+         "tilecount":9,
          "tileheight":100,
          "tilewidth":100
         }],
