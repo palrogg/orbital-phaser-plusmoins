@@ -5,9 +5,6 @@ let listensToKeyboard = true;
 let currentLevel = 1;
 const maxLevel = 2;
 
-var redGuy, blackGuy;
-
-
 
 export class LevelsScene extends Phaser.Scene {
   
@@ -25,9 +22,7 @@ export class LevelsScene extends Phaser.Scene {
     
     // sound
     this.load.audio('music', [ 'sound/game_jam_v1.mp3' ]);
-    this.load.audio('move', [ 'sound/deplacement-electric.wav' ]);
-    
-    // this.load.audio('music', [ 'bass.ogg', 'bass.mp3' ]);
+    this.load.audio('move', [ 'sound/deplacement.wav' ]);
   }
 
 
@@ -35,9 +30,11 @@ export class LevelsScene extends Phaser.Scene {
     // const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
     // player = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, "atlas", "misa-front");
     this.map = this.make.tilemap({ key: `lvl${currentLevel}` });
-    var tileset = this.map.addTilesetImage('objetTiles-07');
-    var layer = this.map.createStaticLayer(0, tileset, 0, 0);
-    layer.depth = -5;
+    let tileset = this.map.addTilesetImage('objetTiles-07');
+    let layerCollision = this.map.createStaticLayer(0, tileset, 0, 0);
+    let layerEvent = this.map.createStaticLayer(1, tileset, 0, 0);
+    layerCollision.depth = -10;
+    layerEvent.depth = -5;
   }
 
   nextLevel(){
@@ -89,13 +86,13 @@ export class LevelsScene extends Phaser.Scene {
             )
     }
     
-    redGuy = this.add.sprite(50, 250, 'enemy');
-    let redPlayer = new Player(1, 1);
-    redPlayer.sprite = redGuy;
+    this.redPlayer = new Player(0, 2);
+    this.redPlayer.sprite = this.add.sprite(50, 250, 'enemy');;
     
-    blackGuy = this.add.sprite(50, 350, 'enemy');
+    this.blackPlayer = new Player(0, 3);
+    this.blackPlayer.sprite = this.add.sprite(50, 350, 'enemy');
     
-    var scene = this;
+    let scene = this;
     this.input.keyboard.on('keydown', function(e){
       scene.keyDown(e);
     });
@@ -108,51 +105,82 @@ export class LevelsScene extends Phaser.Scene {
 
   move(xSpan, ySpan, target, scene){
     this.moveSound.play();
+    target.x += xSpan;
+    target.y += ySpan;
+    
     listensToKeyboard = false;
     setTimeout(function(){
       listensToKeyboard = true;
     }, 800);
     
     this.tweens.add({
-      targets: target,
-      x: xSpan,
-      y: ySpan,
+      targets: target.sprite,
+      x: target.sprite.x + xSpan * 100,
+      y: target.sprite.y + ySpan * 100,
       duration: 800,
       ease: "Power2",
       yoyo: false,
       loop: 0
     });
   }
-
+  
+  checkCollides(target, xSpan, ySpan){
+    let result = this.map.getTileAt(target.x + xSpan, target.y + ySpan);
+    if(result === null){
+      // no tile
+      console.log('no coll')
+      return false;
+    } else {
+      console.log(result.layer.name);
+      console.log(result);
+      return result;
+    }
+  }
+  
   keyDown(e, scene){
     if(!listensToKeyboard){
       return;
     }
+    console.log(this.redPlayer.x, this.redPlayer.y)
     if(e.key == 'ArrowRight'){
       // is next case free? If yes: go
-      this.move(redGuy.x + 100, redGuy.y, redGuy, scene);
-      this.move(blackGuy.x + 100, blackGuy.y, blackGuy, scene);
+      
+      this.checkCollides(this.redPlayer, 1, 0);
+      
+      this.move(1, 0, this.redPlayer, scene);
+      this.move(1, 0, this.blackPlayer, scene);
       
       // If no: stay in place
       // scene.tweens.add({
-      //   targets: redGuy,
-      //   x: redGuy.x + 20,
+      //   targets: this.redPlayer,
+      //   x: this.redPlayer.sprite.x + 20,
       //   duration: 100,
       //   ease: "Power2",
       //   yoyo: true,
       //   loop: 0
       // });
     } else if (e.key == 'ArrowLeft'){
-      this.move(redGuy.x - 100, redGuy.y, redGuy, scene);
-      this.move(blackGuy.x - 100, blackGuy.y, blackGuy, scene);
-    } else if(e.key == 'ArrowUp'){
-      this.move(redGuy.x, redGuy.y - 100, redGuy, scene);
-      this.move(blackGuy.x, blackGuy.y + 100, blackGuy, scene);
-    } else if(e.key == 'ArrowDown'){
-      this.move(redGuy.x, redGuy.y + 100, redGuy, scene);
-      this.move(blackGuy.x, blackGuy.y - 100, blackGuy, scene);
       
-      this.nextLevel();
+      this.checkCollides(this.redPlayer, -1, 0);
+
+      this.move(-1, 0, this.redPlayer, scene);
+      this.move(-1, 0, this.blackPlayer, scene);
+    } else if(e.key == 'ArrowUp'){
+      
+      this.checkCollides(this.redPlayer, 0, -1);
+      
+      this.move(0, -1, this.redPlayer, scene);
+      this.move(0, 1, this.blackPlayer, scene);
+    } else if(e.key == 'ArrowDown'){
+      this.checkCollides(this.redPlayer, 0, 1);
+
+      
+      this.move(0, 1, this.redPlayer, scene);
+      this.move(0, -1, this.blackPlayer, scene);
+      
+      
+      console.log( this.map.getTileAt(2, 1) );
+      // this.nextLevel();
       // scene.load.script('main-scene', 'scene.js');
     }
   }
