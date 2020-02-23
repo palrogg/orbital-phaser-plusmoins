@@ -1,6 +1,8 @@
 const webpack = require("webpack");
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 module.exports = {
@@ -35,6 +37,20 @@ module.exports = {
     }),
     new HtmlWebpackPlugin({
       template: "./index.html"
-    })
+    }),
+    new CopyWebpackPlugin([
+        {
+            from: 'levels',
+            to: 'levels'
+        },
+        {
+            from: 'sound',
+            to: 'sound'
+        },
+        {
+            from: 'sprites',
+            to: 'sprites'
+        }
+    ])
   ]
 };
