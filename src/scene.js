@@ -3,25 +3,49 @@ import {Player} from "./player.js";
 
 let listensToKeyboard = true;
 let currentLevel = 1;
-const maxLevel = 3;
-const tilesWidth = 8;
+let allowMove = false;
+let allowClimbing = false;
 
-const blueIsMirror = true;
+let updatedLevels = [];
+
+const maxLevel = 7;
+const tilesWidth = 8;
+const debug = false;
+
+const blueIsMirror = false;
 const goDownEnabled = true;
 
 export class LevelsScene extends Phaser.Scene {
   constructor(){
-    super({ key: 'LevelsScene' })
+    super({ key: 'LevelsScene' });
   }
   
   preload() {
     
     // Tiled level
-    this.load.tilemapTiledJSON('lvl1', 'levels/level1.json');
-    this.load.tilemapTiledJSON('lvl1-changed', 'levels/level1-changed.json');
     
+    this.load.tilemapTiledJSON('lvl1', 'levels/level1_F.json');
+    this.load.tilemapTiledJSON('lvl2', 'levels/level2_F.json');
+    this.load.tilemapTiledJSON('lvl3', 'levels/level3_F.json');
+    this.load.tilemapTiledJSON('lvl4', 'levels/level4_F.json');
+    
+    this.load.tilemapTiledJSON('lvl5', 'levels/level5_P.json');
+    this.load.tilemapTiledJSON('lvl5-changed', 'levels/level5_P-changed.json');
+    
+    
+    this.load.tilemapTiledJSON('lvl6', 'levels/level_g1.json');
+    this.load.tilemapTiledJSON('lvl6-changed', 'levels/level_g1_changed.json');
+    
+    
+    this.load.tilemapTiledJSON('lvl7', 'levels/level_g2.json');
+    this.load.tilemapTiledJSON('lvl7-changed', 'levels/level_g2_changed1.json');
+    this.load.tilemapTiledJSON('lvl7-changed2', 'levels/level_g2_changed2.json');
+    
+    this.load.tilemapTiledJSON('lvl8', 'levels/level1.json');
+    
+    /*
     this.load.tilemapTiledJSON('lvl2', 'levels/level2.json');
-    this.load.tilemapTiledJSON('lvl3', 'levels/level3.json');
+    this.load.tilemapTiledJSON('lvl3', 'levels/level3.json');*/
     // this.load.tilemapTiledJSON('lvl3', 'levels/level3.json');
     
     // Level tiles
@@ -42,17 +66,25 @@ export class LevelsScene extends Phaser.Scene {
     this.load.image('red', 'sprites/red.png');
     this.load.image('blue', 'sprites/blue.png');
     this.load.image('background', 'sprites/background.png');
-    
+    this.load.image('winMessage', 'sprites/finPlugged.png');
+
     // sound
-    this.load.audio('music', [ 'sound/game_jam_v1.mp3' ]);
-    this.load.audio('move', [ 'sound/deplacement.wav' ]);
+    this.load.audio('music', [ 'sound/game_jam_v2.mp3' ]);
+    
     this.load.audio('up', [ 'sound/up.wav' ]);
+    this.load.audio('move', [ 'sound/deplacement.wav' ]);
+    this.load.audio('trap', [ 'sound/decharge.wav' ]);
+    this.load.audio('end', [ 'sound/fin.wav' ]);
+    this.load.audio('switch', [ 'sound/interupteur.wav' ]);
+    this.load.audio('death', [ 'sound/mort.wav' ]);
+    
     
     this.tweenTimeout = null;
     this.eventTimeout = null;
   }
 
   loadLevel(){
+    updatedLevels = [];
     this.map = this.make.tilemap({ key: `lvl${currentLevel}` });
     let tileset = this.map.addTilesetImage('Tiles');
     let layerCollision = this.map.createStaticLayer('Collision', tileset, 0, 0);
@@ -68,8 +100,15 @@ export class LevelsScene extends Phaser.Scene {
   
   updateLevel(){
     this.map.removeAllLayers(); // dirty
-    console.log('change level')
-    this.map = this.make.tilemap({ key: `lvl${currentLevel}-changed` });
+    console.log('Level update...')
+    if(updatedLevels.includes(currentLevel)){
+      console.log('Second update!')
+      this.map = this.make.tilemap({ key: `lvl${currentLevel}-changed2` });
+    } else {
+      this.map = this.make.tilemap({ key: `lvl${currentLevel}-changed` });
+    }
+    updatedLevels.push(currentLevel);
+    
     let tileset = this.map.addTilesetImage('Tiles');
     let layerCollision = this.map.createStaticLayer('Collision', tileset, 0, 0);
     this.layerEvent = this.map.createDynamicLayer('Event', tileset, 0, 0);
@@ -77,6 +116,11 @@ export class LevelsScene extends Phaser.Scene {
 
     layerCollision.depth = -10;
     this.layerEvent.depth = -5;
+  }
+  
+  resetLevel(){
+    this.map.removeAllLayers(); 
+    this.loadLevel();
   }
 
   nextLevel(){
@@ -87,6 +131,8 @@ export class LevelsScene extends Phaser.Scene {
       this.loadLevel();
       this.redPlayer.reset(0, 2);
       this.bluePlayer.reset(0, 3);
+    }else{
+      this.win();
     }
   }
 
@@ -103,9 +149,14 @@ export class LevelsScene extends Phaser.Scene {
     this.moveSound = this.sound.add('move');
     this.upSound = this.sound.add('up');
     
+    this.trapSound = this.sound.add('trap');
+    this.endSound = this.sound.add('end');
+    this.switchSound = this.sound.add('switch');
+    this.deathSound = this.sound.add('death');
+
     // Music
     this.music = this.sound.add('music', {loop: true});
-    this.music.play();
+    if(!debug) this.music.play();
     
     // Add characters
     this.redPlayer = new Player(0, 2, 'Red');
@@ -123,6 +174,9 @@ export class LevelsScene extends Phaser.Scene {
   
   trapEvent(target){
     // console.log('--- trap event for' + target.name + ' ---')
+    console.log(this);
+    this.trapSound.play();
+    
     let anim;
     if(target.name === 'Red'){
       this.anims.create({ key: 'trap',  frameRate: 20, frames: this.anims.generateFrameNames('trap-red'), repeat: 4 });
@@ -135,6 +189,10 @@ export class LevelsScene extends Phaser.Scene {
     
     let scene = this;
     anim.once('animationcomplete', function(){
+      if(updatedLevels.includes(currentLevel)){
+        console.log('reset level')
+        scene.resetLevel();
+      }
       anim.destroy();
       scene.redPlayer.reset(0, 2);
       scene.bluePlayer.reset(0, 3);
@@ -144,6 +202,7 @@ export class LevelsScene extends Phaser.Scene {
   deathEvent(target){
     // death anim
     // console.log('--- death event for' + target.name + ' ---')
+    this.deathSound.play();
     
     let anim;
     if(target.name === 'Red'){
@@ -159,18 +218,24 @@ export class LevelsScene extends Phaser.Scene {
     anim.once('animationcomplete', function(){
       console.log('complete')
       setTimeout(function(){
+        if(updatedLevels.includes(currentLevel)){
+          console.log('reset level')
+          scene.resetLevel();
+        }
         anim.destroy();
         scene.redPlayer.reset(0, 2);
         scene.bluePlayer.reset(0, 3);
-
       }, 800)
     }, this);
   }
 
   plugEvent(){
+    
     // Two players at the same time or not?
     if(this.redPlayer.plugged && this.bluePlayer.plugged){
       console.log('PLUGGED!')
+      
+      this.endSound.play();
       
       this.anims.create({ key: 'red-plug',  frameRate: 12, frames: this.anims.generateFrameNames('anime-red'), repeat: 0 });
       this.anims.create({ key: 'blue-plug',  frameRate: 12, frames: this.anims.generateFrameNames('anime-blue'), repeat: 0 });
@@ -198,6 +263,24 @@ export class LevelsScene extends Phaser.Scene {
     }
   }
   
+  win(){
+    const winMessage = this.add.sprite(400, 300, 'winMessage'); //.setInteractive();
+    
+    let scene = this;
+    
+    listensToKeyboard = false;
+    /*winMessage.on('pointerdown', function(){
+      scene.resetLevel();
+      currentLevel = 1;
+      scene.loadLevel();
+      scene.redPlayer.reset(0, 2);
+      scene.bluePlayer.reset(0, 3);
+      setTimeout(function(){
+        winMessage.destroy();
+      }, 200);
+    });*/
+  }
+  
   tweenComplete(target){
     clearTimeout(this.tweenTimeout);
     let scene = this;
@@ -216,7 +299,7 @@ export class LevelsScene extends Phaser.Scene {
   }
 
   move(target, xSpan, ySpan){
-    if(ySpan !== 0){
+    if((ySpan > 0 && target.name == 'Blue') || (ySpan < 0 && target.name == 'Red') ){
       this.upSound.play();
     } else{
       this.moveSound.play();
@@ -243,7 +326,7 @@ export class LevelsScene extends Phaser.Scene {
     this.tweens.add({
       targets: target.sprite,
       x: target.sprite.x + xSpan * 20,
-      y: target.sprite.y + ySpan * 2,
+      y: target.sprite.y + ySpan * 10,
       duration: 100,
       ease: "Power2",
       yoyo: true,
@@ -252,12 +335,39 @@ export class LevelsScene extends Phaser.Scene {
   }
   
   attemptClimb(target, xSpan, ySpan){
+    // console.log(target.name + ' attempts to climb')
     let resultEvent = this.map.getTileAt(target.x, target.y, false, 'Event');
     if (resultEvent !== null){
       // if ladder
-      if(resultEvent.index == 3 || resultEvent.index == 3 + 2 * tilesWidth){
-        this.move(target, xSpan, ySpan);
-      }     
+      
+      if(blueIsMirror){
+        // “dead body” logic, blue moves if red moves
+        if(resultEvent.index == 3){
+          this.move(target, xSpan, ySpan);
+          
+          // dirty
+          allowClimbing = true;
+          setTimeout(function(){
+            console.log('not anymore')
+            allowClimbing = false;
+          }, 500);
+        }
+        
+        let scene = this;
+        
+        setTimeout(function(){
+          if(resultEvent.index == 3 + 2 * tilesWidth){
+            scene.move(target, xSpan, ySpan);
+
+          }
+        }, 200)
+      }else{
+        // both characters move freely
+        if(resultEvent.index == 3 || resultEvent.index == 3 + 2 * tilesWidth){
+          this.move(target, xSpan, ySpan);
+        }     
+      }
+      
    }
   }
   
@@ -278,13 +388,14 @@ export class LevelsScene extends Phaser.Scene {
     }
   }
   
-  checkForEvents(target){
+  // nearPlug()
+  
+  checkForEvents(target, xSpan = 0, ySpan = 0){
     let resultEvent = this.map.getTileAt(target.x, target.y, false, 'Event');
     if (resultEvent !== null){
       // special tile
-      console.log('Event!', resultEvent.layer.name);
-      console.log(resultEvent);  
-      
+      // console.log('Event!', resultEvent.layer.name);
+      // console.log(resultEvent);  
   
       if(resultEvent.index == 2 || resultEvent.index == 2 + 2 * tilesWidth){
         console.log(target.name, 'found the exit')
@@ -294,11 +405,13 @@ export class LevelsScene extends Phaser.Scene {
         let scene = this;
         this.eventTimeout = setTimeout(function(){
           scene.plugEvent();
-        });
+        }, 100);
       } else if (resultEvent.index == 6 || resultEvent.index == 6 + 2 * tilesWidth){
         // Trap
         this.trapEvent(target);
       } else if (resultEvent.index == 10){
+        // Button!
+        this.switchSound.play();
         this.updateLevel();
       }
     }
@@ -311,13 +424,31 @@ export class LevelsScene extends Phaser.Scene {
     if (xSpan != 0){ // horizontal movement
       
       // Out of bounds
-      if(target.x + xSpan < 0 || target.x + xSpan > 8){
+      if(target.x + xSpan < 0 || target.x + xSpan >= 8){
         this.showCollision(target, xSpan, ySpan);
         return;
       }
       
       if(!result){
-        this.move(target, xSpan, ySpan);
+        if(blueIsMirror){ // blue only moves if red moves
+          if(target.name == 'Red'){
+            this.move(target, xSpan, ySpan);
+            allowMove = true;
+            setTimeout(function(){
+              allowMove = false;
+            }, 500);
+          } else {
+            let scene = this;
+            setTimeout(function(){
+              if(allowMove){
+                scene.move(target, xSpan, ySpan);
+              }
+            }, 200);
+          }
+          
+        } else {
+          this.move(target, xSpan, ySpan);          
+        }
       } else {
         // collision
         this.showCollision(target, xSpan, ySpan);
@@ -325,10 +456,14 @@ export class LevelsScene extends Phaser.Scene {
       }
     }else{
       // vertical movement
-      if (ySpan < 0 && target.name == 'Red'){
-        this.attemptClimb(target, xSpan, ySpan);
-      } else if (ySpan > 0 && target.name == 'Blue'){
-        this.attemptClimb(target, xSpan, ySpan);
+      if(!result){
+        if (ySpan < 0 && target.name == 'Red'){
+          this.attemptClimb(target, xSpan, ySpan);
+        } else if (ySpan > 0 && target.name == 'Blue'){
+          this.attemptClimb(target, xSpan, ySpan);
+        }
+      }else{
+        this.showCollision(target, xSpan, ySpan);
       }
     }
   }
