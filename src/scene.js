@@ -126,10 +126,28 @@ export class LevelsScene extends Phaser.Scene {
   
   deathEvent(target){
     // death anim
-    console.log('--- death event for' + target.name + ' ---')
+    // console.log('--- death event for' + target.name + ' ---')
     
-    this.redPlayer.reset(0, 2);
-    this.bluePlayer.reset(0, 3);
+    let anim;
+    if(target.name === 'Red'){
+      this.anims.create({ key: 'notPlugged',  frameRate: 12, frames: this.anims.generateFrameNames('notPlugged-red'), repeat: 0 });
+      anim = this.add.sprite(target.sprite.x, target.sprite.y, 'notPlugged-red').play('notPlugged');
+    } else {
+      this.anims.create({ key: 'notPlugged',  frameRate: 12, frames: this.anims.generateFrameNames('notPlugged-blue'), repeat: 0 });
+      anim = this.add.sprite(target.sprite.x, target.sprite.y, 'notPlugged-blue').play('notPlugged');
+    }
+    target.sprite.alpha = 0;
+
+    let scene = this;
+    anim.once('animationcomplete', function(){
+      console.log('complete')
+      setTimeout(function(){
+        anim.destroy();
+        scene.redPlayer.reset(0, 2);
+        scene.bluePlayer.reset(0, 3);
+
+      }, 800)
+    }, this);
   }
 
   plugEvent(){
@@ -137,8 +155,8 @@ export class LevelsScene extends Phaser.Scene {
     if(this.redPlayer.plugged && this.bluePlayer.plugged){
       console.log('PLUGGED!')
       
-      this.anims.create({ key: 'red-plug',  frameRate: 6, frames: this.anims.generateFrameNames('anime-red'), repeat: 0 });
-      this.anims.create({ key: 'blue-plug',  frameRate: 6, frames: this.anims.generateFrameNames('anime-blue'), repeat: 0 });
+      this.anims.create({ key: 'red-plug',  frameRate: 12, frames: this.anims.generateFrameNames('anime-red'), repeat: 0 });
+      this.anims.create({ key: 'blue-plug',  frameRate: 12, frames: this.anims.generateFrameNames('anime-blue'), repeat: 0 });
 
       this.redPlayer.sprite.alpha = 0;
       this.bluePlayer.sprite.alpha = 0;
@@ -160,9 +178,6 @@ export class LevelsScene extends Phaser.Scene {
       } else if(!this.bluePlayer.plugged){
         this.deathEvent(this.bluePlayer);
       }
-      
-      this.redPlayer.reset(0, 2);
-      this.bluePlayer.reset(0, 3);
     }
   }
   
