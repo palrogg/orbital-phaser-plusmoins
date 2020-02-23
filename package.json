@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/palrogg/orbital-phaser-plusmoins/issues"
   },
-  "homepage": "https://github.com/palrogg/orbital-phaser-plusmoins",
+  "homepage": "https://dev.tcch.ch",
   "devDependencies": {
     "@babel/core": "^7.7.2",
     "@babel/preset-env": "^7.7.1",
