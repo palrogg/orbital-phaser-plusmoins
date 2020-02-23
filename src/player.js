@@ -1,3 +1,5 @@
+import Phaser from "phaser";
+
 export class Player {
   constructor(x, y, name) {
     this.x = x;
@@ -17,6 +19,7 @@ export class Player {
     if(this.sprite){
       this.sprite.x = 50;
       this.sprite.y = y * 100 + 50;
+      this.sprite.alpha = 1;
     }
   }
 }

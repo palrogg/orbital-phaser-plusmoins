@@ -7,6 +7,9 @@ const maxLevel = 3;
 const tilesWidth = 8;
 
 export class LevelsScene extends Phaser.Scene {
+  constructor(){
+    super({ key: 'LevelsScene' })
+  }
   
   preload() {
     
@@ -14,12 +17,23 @@ export class LevelsScene extends Phaser.Scene {
     this.load.tilemapTiledJSON('lvl1', 'levels/level1.json');
     this.load.tilemapTiledJSON('lvl2', 'levels/level2.json');
     this.load.tilemapTiledJSON('lvl3', 'levels/level3.json');
+    // this.load.tilemapTiledJSON('lvl3', 'levels/level3.json');
     
     // Level tiles
     this.load.image('Tiles', 'sprites/Tiles.png');
     
     // character sprites
-    this.load.spritesheet('enemy', 'sprites/spritesheet_caveman.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('anime-red', 'sprites/animeRed.png', { frameWidth: 100, frameHeight: 100 });
+    this.load.spritesheet('anime-blue', 'sprites/animeBlue.png', { frameWidth: 100, frameHeight: 100 });
+    
+    // trapped anim
+    this.load.spritesheet('trap-red', 'sprites/chocRed.png', { frameWidth: 100, frameHeight: 100 });
+    this.load.spritesheet('trap-blue', 'sprites/chocBlue.png', { frameWidth: 100, frameHeight: 100 });
+    
+    // not plugged death anim
+    this.load.spritesheet('notPlugged-red', 'sprites/mortRed.png', { frameWidth: 100, frameHeight: 100 });
+    this.load.spritesheet('notPlugged-blue', 'sprites/mortBlue.png', { frameWidth: 100, frameHeight: 100 });
+    
     this.load.image('red', 'sprites/red.png');
     this.load.image('blue', 'sprites/blue.png');
     this.load.image('background', 'sprites/background.png');
@@ -27,6 +41,7 @@ export class LevelsScene extends Phaser.Scene {
     // sound
     this.load.audio('music', [ 'sound/game_jam_v1.mp3' ]);
     this.load.audio('move', [ 'sound/deplacement.wav' ]);
+    this.load.audio('up', [ 'sound/up.wav' ]);
     
     this.tweenTimeout = null;
     this.eventTimeout = null;
@@ -36,10 +51,12 @@ export class LevelsScene extends Phaser.Scene {
     this.map = this.make.tilemap({ key: `lvl${currentLevel}` });
     let tileset = this.map.addTilesetImage('Tiles');
     let layerCollision = this.map.createStaticLayer('Collision', tileset, 0, 0);
-    let layerEvent = this.map.createStaticLayer('Event', tileset, 0, 0);
+    this.layerEvent = this.map.createDynamicLayer('Event', tileset, 0, 0);
     let layerFloor = this.map.createStaticLayer('Floor', tileset, 0, 0);
+    
+
     layerCollision.depth = -10;
-    layerEvent.depth = -5;
+    this.layerEvent.depth = -5;
     
     // for objects:
     // const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
@@ -57,21 +74,17 @@ export class LevelsScene extends Phaser.Scene {
   }
 
   create() {
-    /*const redBackground = this.add.rectangle(400, 150, 800, 300, 0xccaaaa);
-    const greenBackground = this.add.rectangle(400, 450, 800, 300, 0xaaaacc);
-    redBackground.depth = -15;
-    greenBackground.depth = -15;*/
-    
+    this.scene.remove('TitleScene');
+
     const background = this.add.sprite(400, 300, 'background');
     background.alpha = 0.5;
     background.depth = -15;
-    
-    const cursors = this.input.keyboard.createCursorKeys();
-    
+        
     this.loadLevel()
 
     // Sound FX
     this.moveSound = this.sound.add('move');
+    this.upSound = this.sound.add('up');
     
     // Music
     this.music = this.sound.add('music', {loop: true});
@@ -91,37 +104,69 @@ export class LevelsScene extends Phaser.Scene {
     });
   }
   
-  deathEvent(){
+  trapEvent(target){
+    // console.log('--- trap event for' + target.name + ' ---')
+    let anim;
+    if(target.name === 'Red'){
+      this.anims.create({ key: 'trap',  frameRate: 20, frames: this.anims.generateFrameNames('trap-red'), repeat: 4 });
+      anim = this.add.sprite(target.sprite.x, target.sprite.y, 'trap-red').play('trap');
+    } else {
+      this.anims.create({ key: 'trap',  frameRate: 20, frames: this.anims.generateFrameNames('trap-blue'), repeat: 4 });
+      anim = this.add.sprite(target.sprite.x, target.sprite.y, 'trap-blue').play('trap');
+    }
+    target.sprite.alpha = 0;
+    
+    let scene = this;
+    anim.once('animationcomplete', function(){
+      anim.destroy();
+      scene.redPlayer.reset(0, 2);
+      scene.bluePlayer.reset(0, 3);
+    }, this);
+  }
+  
+  deathEvent(target){
     // death anim
+    console.log('--- death event for' + target.name + ' ---')
     
     this.redPlayer.reset(0, 2);
     this.bluePlayer.reset(0, 3);
   }
 
   plugEvent(){
-    console.log('PLUG EVENT !!')
+    // Two players at the same time or not?
     if(this.redPlayer.plugged && this.bluePlayer.plugged){
-      // yeah!
-      console.log('yeah.')
-      this.nextLevel();
+      console.log('PLUGGED!')
+      
+      this.anims.create({ key: 'red-plug',  frameRate: 6, frames: this.anims.generateFrameNames('anime-red'), repeat: 0 });
+      this.anims.create({ key: 'blue-plug',  frameRate: 6, frames: this.anims.generateFrameNames('anime-blue'), repeat: 0 });
+
+      this.redPlayer.sprite.alpha = 0;
+      this.bluePlayer.sprite.alpha = 0;
+
+      let redAnim = this.add.sprite(this.redPlayer.sprite.x, this.redPlayer.sprite.y, 'anime-red').play('red-plug');
+      let rightAnim = this.add.sprite(this.bluePlayer.sprite.x, this.bluePlayer.sprite.y, 'anime-blue').play('blue-plug');
+
+      let scene = this;
+      setTimeout(function(){
+        redAnim.destroy();
+        rightAnim.destroy();
+        scene.nextLevel();
+      }, 800);
     } else {
-      console.log('not good')
-      alert('Argh. Not plugged together. Start again')
+      console.log('not good – one character dies')
+      
+      if(!this.redPlayer.plugged){
+        this.deathEvent(this.redPlayer);
+      } else if(!this.bluePlayer.plugged){
+        this.deathEvent(this.bluePlayer);
+      }
+      
       this.redPlayer.reset(0, 2);
       this.bluePlayer.reset(0, 3);
-      // not good
     }
-    // Two players at the same time or not?
-    
-    // TODO: animation
-    // sprite.animations.add('walk');
-    // sprite.animations.play('walk', 50, true);
-    // this.add.tween(sprite).to({ x: this.width }, 10000, Phaser.Easing.Linear.None, true);
   }
   
   tweenComplete(target){
-    console.log('tween complete')
-    
     clearTimeout(this.tweenTimeout);
     let scene = this;
     this.tweenTimeout = setTimeout(function(){
@@ -139,7 +184,12 @@ export class LevelsScene extends Phaser.Scene {
   }
 
   move(target, xSpan, ySpan){
-    this.moveSound.play();
+    if(ySpan !== 0){
+      this.upSound.play();
+    } else{
+      this.moveSound.play();
+    }
+    
     target.x += xSpan;
     target.y += ySpan;
     
@@ -181,17 +231,16 @@ export class LevelsScene extends Phaser.Scene {
   
   attemptFall(target, ySpan){
     let resultFloor = this.map.getTileAt(target.x, target.y, false, 'Floor');
-    console.log('Floor:', resultFloor);
     if(resultFloor){
-      console.log('fall: floor')
+      // console.log('fall: floor')
       return;
     }
     let resultCollision = this.map.getTileAt(target.x, target.y + ySpan, false, 'Collision');
     if(resultCollision){
-      console.log('fall: collision')
+      // console.log('fall: collision')
       return;
     } else if ( (target.name == 'Red' && target.y >= 2) || (target.name == 'Blue' && target.y <= 3) ){
-      console.log('too low')
+      // console.log('too low')
     } else {
       this.move(target, 0, ySpan);
     }
@@ -216,10 +265,12 @@ export class LevelsScene extends Phaser.Scene {
         });
       } else if (resultEvent.index == 6 || resultEvent.index == 6 + 2 * tilesWidth){
         // trap
-        this.deathEvent();
+        this.trapEvent(target);
       } else if (resultEvent.index == 10){
         // bouton
         console.log('Button!!')
+        
+        this.layerEvent.putTileAt(11, resultEvent.x, resultEvent.y);
       }
     }
   }
@@ -228,8 +279,14 @@ export class LevelsScene extends Phaser.Scene {
     let result = this.map.getTileAt(target.x + xSpan, target.y + ySpan, false, 'Collision');
     let resultEvent = this.map.getTileAt(target.x + xSpan, target.y + ySpan, false, 'Event');
     
-    if (xSpan != 0){
-      // horizontal movement
+    if (xSpan != 0){ // horizontal movement
+      
+      // Out of bounds
+      if(target.x + xSpan < 0 || target.x + xSpan > 8){
+        this.showCollision(target, xSpan, ySpan);
+        return;
+      }
+      
       if(!result){
         this.move(target, xSpan, ySpan);
       } else {
