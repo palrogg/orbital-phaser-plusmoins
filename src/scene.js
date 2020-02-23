@@ -6,6 +6,9 @@ let currentLevel = 1;
 const maxLevel = 3;
 const tilesWidth = 8;
 
+const blueIsMirror = true;
+const goDownEnabled = true;
+
 export class LevelsScene extends Phaser.Scene {
   constructor(){
     super({ key: 'LevelsScene' })
@@ -15,6 +18,8 @@ export class LevelsScene extends Phaser.Scene {
     
     // Tiled level
     this.load.tilemapTiledJSON('lvl1', 'levels/level1.json');
+    this.load.tilemapTiledJSON('lvl1-changed', 'levels/level1-changed.json');
+    
     this.load.tilemapTiledJSON('lvl2', 'levels/level2.json');
     this.load.tilemapTiledJSON('lvl3', 'levels/level3.json');
     // this.load.tilemapTiledJSON('lvl3', 'levels/level3.json');
@@ -53,13 +58,25 @@ export class LevelsScene extends Phaser.Scene {
     let layerCollision = this.map.createStaticLayer('Collision', tileset, 0, 0);
     this.layerEvent = this.map.createDynamicLayer('Event', tileset, 0, 0);
     let layerFloor = this.map.createStaticLayer('Floor', tileset, 0, 0);
-    
 
     layerCollision.depth = -10;
     this.layerEvent.depth = -5;
     
     // for objects:
     // const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
+  }
+  
+  updateLevel(){
+    this.map.removeAllLayers(); // dirty
+    console.log('change level')
+    this.map = this.make.tilemap({ key: `lvl${currentLevel}-changed` });
+    let tileset = this.map.addTilesetImage('Tiles');
+    let layerCollision = this.map.createStaticLayer('Collision', tileset, 0, 0);
+    this.layerEvent = this.map.createDynamicLayer('Event', tileset, 0, 0);
+    let layerFloor = this.map.createStaticLayer('Floor', tileset, 0, 0);
+
+    layerCollision.depth = -10;
+    this.layerEvent.depth = -5;
   }
 
   nextLevel(){
@@ -279,13 +296,10 @@ export class LevelsScene extends Phaser.Scene {
           scene.plugEvent();
         });
       } else if (resultEvent.index == 6 || resultEvent.index == 6 + 2 * tilesWidth){
-        // trap
+        // Trap
         this.trapEvent(target);
       } else if (resultEvent.index == 10){
-        // bouton
-        console.log('Button!!')
-        
-        this.layerEvent.putTileAt(11, resultEvent.x, resultEvent.y);
+        this.updateLevel();
       }
     }
   }
