@@ -3,8 +3,8 @@ import {Player} from "./player.js";
 
 let listensToKeyboard = true;
 let currentLevel = 1;
-const maxLevel = 2;
-
+const maxLevel = 3;
+const tilesWidth = 8;
 
 export class LevelsScene extends Phaser.Scene {
   
@@ -13,6 +13,7 @@ export class LevelsScene extends Phaser.Scene {
     // Tiled level
     this.load.tilemapTiledJSON('lvl1', 'levels/level1.json');
     this.load.tilemapTiledJSON('lvl2', 'levels/level2.json');
+    this.load.tilemapTiledJSON('lvl3', 'levels/level3.json');
     
     // Level tiles
     this.load.image('Tiles', 'sprites/Tiles.png');
@@ -21,18 +22,17 @@ export class LevelsScene extends Phaser.Scene {
     this.load.spritesheet('enemy', 'sprites/spritesheet_caveman.png', { frameWidth: 32, frameHeight: 32 });
     this.load.image('red', 'sprites/red.png');
     this.load.image('blue', 'sprites/blue.png');
+    this.load.image('background', 'sprites/background.png');
     
     // sound
     this.load.audio('music', [ 'sound/game_jam_v1.mp3' ]);
     this.load.audio('move', [ 'sound/deplacement.wav' ]);
     
     this.tweenTimeout = null;
+    this.eventTimeout = null;
   }
 
-
   loadLevel(){
-    // const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
-    // player = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, "atlas", "misa-front");
     this.map = this.make.tilemap({ key: `lvl${currentLevel}` });
     let tileset = this.map.addTilesetImage('Tiles');
     let layerCollision = this.map.createStaticLayer('Collision', tileset, 0, 0);
@@ -40,6 +40,9 @@ export class LevelsScene extends Phaser.Scene {
     let layerFloor = this.map.createStaticLayer('Floor', tileset, 0, 0);
     layerCollision.depth = -10;
     layerEvent.depth = -5;
+    
+    // for objects:
+    // const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
   }
 
   nextLevel(){
@@ -48,65 +51,74 @@ export class LevelsScene extends Phaser.Scene {
       this.map.removeAllLayers(); // dirty
       
       this.loadLevel();
+      this.redPlayer.reset(0, 2);
+      this.bluePlayer.reset(0, 3);
     }
   }
 
   create() {
-    const redBackground = this.add.rectangle(400, 150, 800, 300, 0xcc9999);
-    const greenBackground = this.add.rectangle(400, 450, 800, 300, 0x9999cc);
+    /*const redBackground = this.add.rectangle(400, 150, 800, 300, 0xccaaaa);
+    const greenBackground = this.add.rectangle(400, 450, 800, 300, 0xaaaacc);
     redBackground.depth = -15;
-    greenBackground.depth = -15;
+    greenBackground.depth = -15;*/
+    
+    const background = this.add.sprite(400, 300, 'background');
+    background.alpha = 0.5;
+    background.depth = -15;
     
     const cursors = this.input.keyboard.createCursorKeys();
     
     this.loadLevel()
 
-    // fx
+    // Sound FX
     this.moveSound = this.sound.add('move');
     
-    // music
+    // Music
     this.music = this.sound.add('music', {loop: true});
-    // this.music.play();
+    this.music.play();
     
-    // temp
-    for(let i = 1; i < 8; i++){
-      const line = this.add.line(
-                400,
-                i*100,
-                0,
-                0,
-                800,
-                0,
-                0x333333
-            )
-    }
-    for(let i = 1; i < 8; i++){
-      const line = this.add.line(
-                i*100,
-                300,
-                0,
-                0,
-                0,
-                600,
-                0x333333
-            )
-    }
-    
+    // Add characters
     this.redPlayer = new Player(0, 2, 'Red');
     this.redPlayer.sprite = this.add.sprite(50, 250, 'red');;
     
     this.bluePlayer = new Player(0, 3, 'Blue');
     this.bluePlayer.sprite = this.add.sprite(50, 350, 'blue');
     
+    // Listen to events
     let scene = this;
     this.input.keyboard.on('keydown', function(e){
       scene.keyDown(e);
     });
+  }
+  
+  deathEvent(){
+    // death anim
+    
+    this.redPlayer.reset(0, 2);
+    this.bluePlayer.reset(0, 3);
+  }
 
+  plugEvent(){
+    console.log('PLUG EVENT !!')
+    if(this.redPlayer.plugged && this.bluePlayer.plugged){
+      // yeah!
+      console.log('yeah.')
+      this.nextLevel();
+    } else {
+      console.log('not good')
+      alert('Argh. Not plugged together. Start again')
+      this.redPlayer.reset(0, 2);
+      this.bluePlayer.reset(0, 3);
+      // not good
+    }
+    // Two players at the same time or not?
+    
+    // TODO: animation
     // sprite.animations.add('walk');
     // sprite.animations.play('walk', 50, true);
     // this.add.tween(sprite).to({ x: this.width }, 10000, Phaser.Easing.Linear.None, true);
   }
+  
   tweenComplete(target){
     console.log('tween complete')
     
@@ -122,10 +134,8 @@ export class LevelsScene extends Phaser.Scene {
   }
   
   fall(target){
-    console.log(target)
     this.attemptFall(this.redPlayer, 1);
     this.attemptFall(this.bluePlayer, -1);
-
   }
 
   move(target, xSpan, ySpan){
@@ -162,11 +172,10 @@ export class LevelsScene extends Phaser.Scene {
   attemptClimb(target, xSpan, ySpan){
     let resultEvent = this.map.getTileAt(target.x, target.y, false, 'Event');
     if (resultEvent !== null){
-     // special tile
-     console.log('Event!', resultEvent.layer.name);
-     console.log(resultEvent);
-     // if ladder
-     this.move(target, xSpan, ySpan);
+      // if ladder
+      if(resultEvent.index == 3 || resultEvent.index == 3 + 2 * tilesWidth){
+        this.move(target, xSpan, ySpan);
+      }     
    }
   }
   
@@ -194,6 +203,24 @@ export class LevelsScene extends Phaser.Scene {
       // special tile
       console.log('Event!', resultEvent.layer.name);
       console.log(resultEvent);  
+      
+  
+      if(resultEvent.index == 2 || resultEvent.index == 2 + 2 * tilesWidth){
+        console.log(target.name, 'found the exit')
+        target.didPlug();
+        
+        clearTimeout(this.eventTimeout);
+        let scene = this;
+        this.eventTimeout = setTimeout(function(){
+          scene.plugEvent();
+        });
+      } else if (resultEvent.index == 6 || resultEvent.index == 6 + 2 * tilesWidth){
+        // trap
+        this.deathEvent();
+      } else if (resultEvent.index == 10){
+        // bouton
+        console.log('Button!!')
+      }
     }
   }
   

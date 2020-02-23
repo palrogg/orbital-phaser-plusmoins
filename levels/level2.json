@@ -1,12 +1,43 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "target":"."
+        }
+    },
  "height":6,
  "infinite":false,
  "layers":[
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 8, 4, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+         "data":[0, 0, 0, 0, 0, 0, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 4, 4, 20, 20, 20, 20, 20, 20, 20, 20, 0, 0, 0, 0, 20, 20, 0, 0, 0, 0, 0, 0, 0, 20, 20, 20],
+         "height":6,
+         "id":3,
+         "name":"Floor",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18],
+         "height":6,
+         "id":2,
+         "name":"Event",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":6,
          "id":1,
-         "name":"Tile Layer 1",
+         "name":"Collision",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
@@ -14,7 +45,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":2,
+ "nextlayerid":4,
  "nextobjectid":1,
  "orientation":"orthogonal",
  "renderorder":"right-down",
@@ -22,15 +53,15 @@
  "tileheight":100,
  "tilesets":[
         {
-         "columns":3,
+         "columns":8,
          "firstgid":1,
-         "image":"..\/sprites\/objetTiles-07.png",
+         "image":"..\/sprites\/Tiles.png",
          "imageheight":300,
-         "imagewidth":300,
+         "imagewidth":800,
          "margin":0,
-         "name":"objetTiles-07",
+         "name":"Tiles",
          "spacing":0,
-         "tilecount":9,
+         "tilecount":24,
          "tileheight":100,
          "tilewidth":100
         }],
