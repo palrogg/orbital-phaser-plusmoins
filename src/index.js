@@ -12,6 +12,13 @@ const config = {
   scene: [IntroScene, LevelsScene],
   physics: {
     default: 'arcade'
+  },
+  scale: {
+    parent: 'game_container',
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    mode: Phaser.Scale.FIT,
+    width: 800,
+    height: 600
   }
 };
 
