@@ -24,24 +24,24 @@ export class LevelsScene extends Phaser.Scene {
     
     // Tiled level
     
-    this.load.tilemapTiledJSON('lvl1', 'levels/level1_F.json');
-    this.load.tilemapTiledJSON('lvl2', 'levels/level2_F.json');
-    this.load.tilemapTiledJSON('lvl3', 'levels/level3_F.json');
-    this.load.tilemapTiledJSON('lvl4', 'levels/level4_F.json');
-    
-    this.load.tilemapTiledJSON('lvl5', 'levels/level5_P.json');
-    this.load.tilemapTiledJSON('lvl5-changed', 'levels/level5_P-changed.json');
-    
-    
-    this.load.tilemapTiledJSON('lvl6', 'levels/level_g1.json');
-    this.load.tilemapTiledJSON('lvl6-changed', 'levels/level_g1_changed.json');
-    
-    
-    this.load.tilemapTiledJSON('lvl7', 'levels/level_g2.json');
-    this.load.tilemapTiledJSON('lvl7-changed', 'levels/level_g2_changed1.json');
-    this.load.tilemapTiledJSON('lvl7-changed2', 'levels/level_g2_changed2.json');
-    
-    this.load.tilemapTiledJSON('lvl8', 'levels/level1.json');
+   this.load.tilemapTiledJSON('lvl1', 'levels/level1_F.json');
+   this.load.tilemapTiledJSON('lvl2', 'levels/level2_F.json');
+   this.load.tilemapTiledJSON('lvl3', 'levels/level3_F.json');
+   this.load.tilemapTiledJSON('lvl4', 'levels/level4_F.json');
+   
+   this.load.tilemapTiledJSON('lvl5', 'levels/level5_P.json');
+   this.load.tilemapTiledJSON('lvl5-changed', 'levels/level5_P-changed.json');
+   
+   
+   this.load.tilemapTiledJSON('lvl6', 'levels/level_g1.json');
+   this.load.tilemapTiledJSON('lvl6-changed', 'levels/level_g1_changed.json');
+   
+   
+   this.load.tilemapTiledJSON('lvl7', 'levels/level_g2.json');
+   this.load.tilemapTiledJSON('lvl7-changed', 'levels/level_g2_changed1.json');
+   this.load.tilemapTiledJSON('lvl7-changed2', 'levels/level_g2_changed2.json');
+   
+   this.load.tilemapTiledJSON('lvl8', 'levels/level1.json');
     
     /*
     this.load.tilemapTiledJSON('lvl2', 'levels/level2.json');
@@ -93,7 +93,6 @@ export class LevelsScene extends Phaser.Scene {
 
     layerCollision.depth = -10;
     this.layerEvent.depth = -5;
-    
     // for objects:
     // const spawnPoint = map.findObject("Objects", obj => obj.name === "Spawn Point");
   }
@@ -131,6 +130,7 @@ export class LevelsScene extends Phaser.Scene {
       this.loadLevel();
       this.redPlayer.reset(0, 2);
       this.bluePlayer.reset(0, 3);
+      listensToKeyboard = true;
     }else{
       this.win();
     }
@@ -169,6 +169,13 @@ export class LevelsScene extends Phaser.Scene {
     let scene = this;
     this.input.keyboard.on('keydown', function(e){
       scene.keyDown(e);
+    });
+    
+    this.input.on('pointerdown', function(e){
+      scene.pointerDown(e);
+     });
+    this.input.on('pointerup', function(e){
+      scene.pointerUp(e);
     });
   }
   
@@ -234,6 +241,7 @@ export class LevelsScene extends Phaser.Scene {
     // Two players at the same time or not?
     if(this.redPlayer.plugged && this.bluePlayer.plugged){
       console.log('PLUGGED!')
+      listensToKeyboard = false;
       
       this.endSound.play();
       
@@ -468,28 +476,39 @@ export class LevelsScene extends Phaser.Scene {
     }
   }
   
+  pointerDown(e, scene){
+    this.touchStartPosition = {x: e.x, y: e.y};
+  }
+  pointerUp(e, scene){
+    if(!listensToKeyboard){
+      return;
+    }
+    let deltaX = e.x - this.touchStartPosition.x;
+    let deltaY = e.y - this.touchStartPosition.y;
+    
+    if(deltaX > 100){
+      this.attemptMove(this.redPlayer, 1, 0);
+      this.attemptMove(this.bluePlayer, 1, 0);
+    }else  if(deltaX < -100){
+      this.attemptMove(this.redPlayer, -1, 0);
+      this.attemptMove(this.bluePlayer, -1, 0);
+    }else if(deltaY < -100){
+      this.attemptMove(this.redPlayer, 0, -1);
+      this.attemptMove(this.bluePlayer, 0, 1);
+    }else if(deltaY > 100){
+      this.attemptMove(this.redPlayer, 0, 1);
+      this.attemptMove(this.bluePlayer, 0, -1);
+    }
+  }
+  
   keyDown(e, scene){
     if(!listensToKeyboard){
       return;
     }
     // console.log(this.redPlayer.x, this.redPlayer.y)
     if(e.key == 'ArrowRight'){
-      // is next case free? If yes: go
-      
       this.attemptMove(this.redPlayer, 1, 0);
-      
       this.attemptMove(this.bluePlayer, 1, 0);
-      
-      
-      // If no: stay in place
-      // scene.tweens.add({
-      //   targets: this.redPlayer,
-      //   x: this.redPlayer.sprite.x + 20,
-      //   duration: 100,
-      //   ease: "Power2",
-      //   yoyo: true,
-      //   loop: 0
-      // });
     } else if (e.key == 'ArrowLeft'){
       
       this.attemptMove(this.redPlayer, -1, 0);
