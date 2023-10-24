@@ -39,18 +39,18 @@ module.exports = {
       template: "./index.html"
     }),
     new CopyWebpackPlugin([
-        {
-            from: 'levels',
-            to: 'levels'
-        },
-        {
-            from: 'sound',
-            to: 'sound'
-        },
-        {
-            from: 'sprites',
-            to: 'sprites'
-        }
+      {
+        from: 'levels',
+        to: 'levels'
+      },
+      {
+        from: 'sound',
+        to: 'sound'
+      },
+      {
+        from: 'sprites',
+        to: 'sprites'
+      }
     ])
   ]
 };
