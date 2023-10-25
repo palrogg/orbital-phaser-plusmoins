@@ -38,19 +38,21 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: "./index.html"
     }),
-    new CopyWebpackPlugin([
-      {
-        from: 'levels',
-        to: 'levels'
-      },
-      {
-        from: 'sound',
-        to: 'sound'
-      },
-      {
-        from: 'sprites',
-        to: 'sprites'
-      }
-    ])
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: 'levels',
+          to: 'levels'
+        },
+        {
+          from: 'sound',
+          to: 'sound'
+        },
+        {
+          from: 'sprites',
+          to: 'sprites'
+        }
+      ]
+    })
   ]
 };
